@@ -15,7 +15,7 @@ permissions:
 jobs:
   build-and-push:
     name: Build and push all services
-    environment: nodeprog-dev
+    environment: devbackend
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

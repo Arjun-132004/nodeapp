@@ -16,9 +16,9 @@ permissions:
 
 jobs:
   app-env-app:
-    name: App env (app ← GitHub environment nodeprog-dev)
+    name: App env (app ← GitHub environment devbackend)
     runs-on: ubuntu-latest
-    environment: "nodeprog-dev"
+    environment: "devbackend"
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     outputs:
       changed: ${{ steps.write.outputs.changed }}
@@ -41,7 +41,12 @@ jobs:
         # logs and expands them nowhere else. The DDA_V_ prefix keeps an app
         # setting called PATH or HOME from breaking the shell below.
         env:
+          DDA_V_JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          DDA_V_SECRET_WORD: ${{ secrets.SECRET_WORD }}
+          DDA_V_CORS_ORIGIN: ${{ vars.CORS_ORIGIN }}
           DDA_V_DEEPAGENT_MANAGED_VARS: ${{ vars.DEEPAGENT_MANAGED_VARS }}
+          DDA_V_NODE_ENV: ${{ vars.NODE_ENV }}
+          DDA_V_PORT: ${{ vars.PORT }}
           DDA_V_VITE_API_URL: ${{ vars.VITE_API_URL }}
         run: |
           set -euo pipefail
@@ -52,7 +57,7 @@ jobs:
           fp() { local d; d=$(kubectl -n storefront-devno get secret app-env-app -o jsonpath='{.data}' 2>/dev/null) || return 0; printf '%s' "$d" | sha256sum | cut -c1-16; }
           BEFORE=$(fp)
           ARGS=()
-          for NAME in DEEPAGENT_MANAGED_VARS VITE_API_URL; do
+          for NAME in JWT_SECRET SECRET_WORD CORS_ORIGIN DEEPAGENT_MANAGED_VARS NODE_ENV PORT VITE_API_URL; do
             SRC="DDA_V_$NAME"
             VAL="${!SRC:-}"
             # A value pasted with a Windows line ending reaches the pod as
@@ -61,7 +66,7 @@ jobs:
             if [ -n "$VAL" ]; then
               ARGS+=("--from-literal=$NAME=$VAL")
             else
-              echo "::warning::$NAME is not set in GitHub environment 'nodeprog-dev' — the app pod will not see it."
+              echo "::warning::$NAME is not set in GitHub environment 'devbackend' — the app pod will not see it."
             fi
           done
           if [ ${#ARGS[@]} -gt 0 ]; then
@@ -75,9 +80,9 @@ jobs:
           if [ -n "$BEFORE" ] && [ "$(fp)" != "$BEFORE" ]; then echo "changed=true" >> "$GITHUB_OUTPUT"; else echo "changed=false" >> "$GITHUB_OUTPUT"; fi
 
   app-env-frontend:
-    name: App env (frontend ← GitHub environment nodeprog-dev)
+    name: App env (frontend ← GitHub environment devbackend)
     runs-on: ubuntu-latest
-    environment: "nodeprog-dev"
+    environment: "devbackend"
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     outputs:
       changed: ${{ steps.write.outputs.changed }}
@@ -100,7 +105,12 @@ jobs:
         # logs and expands them nowhere else. The DDA_V_ prefix keeps an app
         # setting called PATH or HOME from breaking the shell below.
         env:
+          DDA_V_JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          DDA_V_SECRET_WORD: ${{ secrets.SECRET_WORD }}
+          DDA_V_CORS_ORIGIN: ${{ vars.CORS_ORIGIN }}
           DDA_V_DEEPAGENT_MANAGED_VARS: ${{ vars.DEEPAGENT_MANAGED_VARS }}
+          DDA_V_NODE_ENV: ${{ vars.NODE_ENV }}
+          DDA_V_PORT: ${{ vars.PORT }}
           DDA_V_VITE_API_URL: ${{ vars.VITE_API_URL }}
         run: |
           set -euo pipefail
@@ -111,7 +121,7 @@ jobs:
           fp() { local d; d=$(kubectl -n storefront-devno get secret app-env-frontend -o jsonpath='{.data}' 2>/dev/null) || return 0; printf '%s' "$d" | sha256sum | cut -c1-16; }
           BEFORE=$(fp)
           ARGS=()
-          for NAME in DEEPAGENT_MANAGED_VARS VITE_API_URL; do
+          for NAME in JWT_SECRET SECRET_WORD CORS_ORIGIN DEEPAGENT_MANAGED_VARS NODE_ENV PORT VITE_API_URL; do
             SRC="DDA_V_$NAME"
             VAL="${!SRC:-}"
             # A value pasted with a Windows line ending reaches the pod as
@@ -120,7 +130,7 @@ jobs:
             if [ -n "$VAL" ]; then
               ARGS+=("--from-literal=$NAME=$VAL")
             else
-              echo "::warning::$NAME is not set in GitHub environment 'nodeprog-dev' — the frontend pod will not see it."
+              echo "::warning::$NAME is not set in GitHub environment 'devbackend' — the frontend pod will not see it."
             fi
           done
           if [ ${#ARGS[@]} -gt 0 ]; then
