@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodeapp-app
+  namespace: storefront-devan
+  labels:
+    app.kubernetes.io/name: nodeapp-app
+    app.kubernetes.io/managed-by: deepagent
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: nodeapp-app
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
